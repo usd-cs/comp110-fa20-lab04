@@ -46,6 +46,7 @@ def get_max_in_range(my_sound, start, end):
 jolly = sound.load_sound("jolly.wav")
 jolly.play()
 sound.wait_until_played()  # waits until jolly is done playing
+jolly.display()
 
 
 # Add new test code here.
