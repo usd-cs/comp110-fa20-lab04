@@ -14,6 +14,15 @@ def get_max_in_range(my_sound, start, end):
 
     Note that this maximum is the absolute value maximum, so -10 is consider
     larger than 6.
+
+    Parameters:
+    my_sound (type: Sound): A sound object we will inspect.
+    start (type: int): The starting index for the range of samples.
+    end (type: int): The ending index for the range of samples. This is non-inclusive.
+
+    Returns:
+    (type: int) The maximum left channel value in samples between the start
+    and end indices.
     """
 
     first = my_sound[start]
