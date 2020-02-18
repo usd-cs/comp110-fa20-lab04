@@ -25,9 +25,12 @@ def get_max_in_range(my_sound, start, end):
     and end indices.
     """
 
+    # initialize max value to left channel value in the first sample in the range
     first = my_sound[start]
     max_val = abs(first.left)
 
+    # loop through all other samples in the range and keep track of the
+    # largest left channel sample value.
     for i in range(start+1, end):
         sample = my_sound[i]
         left_val = abs(sample.left)
