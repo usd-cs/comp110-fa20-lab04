@@ -1,36 +1,39 @@
 """
 Module: comp110_lab04
 
-Practice code for working with sounds in Python.
+Practice with writing functions, sounds, conditionals, and functional
+composition.
 """
 import sound
 
 
-def get_max_in_range(snd, start, end):
+def get_max_in_range(my_sound, start, end):
     """
-    Returns the maximum left channel value between the start and end indices
-    (inclusive).
+    Returns the maximum left channel value between the start and end indices.
+    The end index is non-inclusive (just like the range function).
 
     Note that this maximum is the absolute value maximum, so -10 is consider
     larger than 6.
     """
 
-    first = snd.get_sample(start)
-    val = abs(first.get_left())
+    first = my_sound[start]
+    max_val = abs(first.left)
 
-    for i in range(start+1, end+1):
-        samp = snd.get_sample(i)
-        left = abs(samp.get_left())
-        if (left > val):
-             val = left
+    for i in range(start+1, end):
+        sample = my_sound[i]
+        left_val = abs(sample.left)
+        if (left_val > max_val):
+             max_val = left_val
 
-    return val
+    return max_val
 
-# Put your definition of set_extremes here
+
+# Add new function definitions here.
+
 
 jolly = sound.load_sound("jolly.wav")
 jolly.play()
 sound.wait_until_played()  # waits until jolly is done playing
 
-# To test, you will need to call your function at this point and play the
-# result.
+
+# Add new test code here.

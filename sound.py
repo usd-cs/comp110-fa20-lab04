@@ -16,6 +16,7 @@ import os
 import sounddevice
 import numpy
 import scipy.io.wavfile
+import matplotlib.pyplot as pp
 
 
 """
@@ -24,62 +25,63 @@ individual sample values.
 """
 
 class MonoSample():
-    """A sample in a single-channeled Sound with a value."""
+    """
+    A sample in a single-channeled Sound with a value.
+
+    Properties:
+        value (int): The sample's channel value.
+    """
 
     def __init__(self, samp_array, i):
-        """Create a MonoSample object at index i from numpy array object
-        samp_array, which has access to the Sound's buffer."""
+        """
+        Create a MonoSample object based on a the sample data at a specific
+        index in an array.
+        """
 
         # negative indices are supported
         if -len(samp_array) <= i <= len(samp_array) - 1:
             self.samp_array = samp_array
-            self.index = i
+            self.__index = i
         else:
             raise IndexError('Sample index out of bounds.')
 
 
     def __str__(self):
-        """Return a str with index and value information."""
+        """Return a string representation of this sample."""
 
-        return "Sample at " + str(self.index) + " with value " \
-            + str(self.get_value())
+        return "Sample at index " + str(self.__index) + " with channel value " \
+            + str(self.value)
 
+    @property
+    def value(self):
+        """(int) This sample's channel value."""
 
-    def set_value(self, val):
-        """Set this Sample's value to val."""
+        return int(self.samp_array[self.__index])
 
-        self.samp_array[self.index] = int(val)
+    @value.setter
+    def value(self, val):
+        self.samp_array[self.__index] = int(val)
 
-
-    def get_value(self):
-        """Return this Sample's value."""
-
-        return int(self.samp_array[self.index])
-
-
-    def get_index(self):
-        """Return this Sample's index."""
-
-        return self.index
-
-    def __cmp__(self, other):
-        return cmp(self.samp_array[self.index], other.samp_array[other.index])
+    def __eq__(self, other):
+        return self.value == other.value
 
 
 class StereoSample():
-    """A sample in a two-channeled Sound with a left and a right value.
+    """
+    A sample in a two-channeled Sound with a left and a right value.
 
-    Attributes:
-        all_samples (numpy.ndarray): All of the samples in the associated sound.
-        index (int): Index in all_samples where sample is located.
+    Properties:
+        left (int): The sample's left channel value.
+        right (int): The sample's right channel value.
     """
 
     def __init__(self, all_samples, i):
-        """Initialize a StereoSample object.
+        """
+        Initialize a StereoSample object.
 
         Parameters:
             all_samples (numpy.ndarray): All the samples in the sound.
-            i (int): Index where this ample is located.
+            i (int): Index where this sample is located.
 
         Raises:
             IndexError: If i isn't a valid index in all_samples
@@ -87,8 +89,8 @@ class StereoSample():
 
         # negative indices are supported
         if -len(all_samples) <= i <= len(all_samples) - 1:
-            self.all_samples = all_samples
-            self.index = i
+            self.__all_samples = all_samples
+            self.__index = i
         else:
             raise IndexError('Sample index out of bounds.')
 
@@ -96,90 +98,41 @@ class StereoSample():
     def __str__(self):
         """Returns a string representation of this sample."""
 
-        return "Sample at " + str(self.index) + " with left value " \
-            + str(self.get_left()) + " and right value " + \
-            str(self.get_right())
+        return "Sample at index " + str(self.__index) + " with a left channel value of " \
+            + str(self.left) + " and a right value value of " + \
+            str(self.right)
 
 
-    def set_values(self, left, right):
-        """Set this sample's left and right channel values.
+    @property
+    def left(self):
+        """(int) This sample's left channel value."""
 
-        Parameters:
-            left (int): New value for the left channel.
-            right (int): New value for the right channel.
-        """
-        if not isinstance(left, int) or not isinstance(right,int):
-            raise TypeError("Channel values must both be int")
+        return int(self.__all_samples[self.__index, 0])
 
-
-        self.all_samples[self.index] = [int(left), int(right)]
-
-
-    def get_values(self):
-        """Return this sample's left and right values.
-
-        Returns:
-            left (int): Current value of left channel.
-            right (int): Current value of right channel.
-        """
-
-        return (self.all_samples[self.index, 0], self.all_samples[self.index, 1])
-
-
-    def set_left(self, new_left_val):
-        """Set this sample's left channel value.
-
-        Parameters:
-            new_left_val (int): New value for the left channel.
-        """
+    @left.setter
+    def left(self, new_left_val):
         if not isinstance(new_left_val, int):
             raise TypeError("Channel value must be an int")
 
-        self.all_samples[self.index, 0] = int(new_left_val)
+        self.__all_samples[self.__index, 0] = new_left_val
 
 
-    def set_right(self, new_right_val):
-        """Set this sample's right channel value.
+    @property
+    def right(self):
+        """(int) This sample's right channel value."""
 
-        Parameters:
-            new_right_val (int): New value for the right channel.
-        """
+        return int(self.__all_samples[self.__index, 1])
+
+    @right.setter
+    def right(self, new_right_val):
         if not isinstance(new_right_val, int):
             raise TypeError("Channel value must be an int")
 
-        self.all_samples[self.index, 1] = int(new_right_val)
-
-
-    def get_left(self):
-        """Return this sample's left value.
-
-        Returns:
-            left (int): Current value of the left channel.
-        """
-
-        return int(self.get_values()[0])
-
-
-    def get_right(self):
-        """Return this sample's right value.
-
-        Returns:
-            right (int): Current value of the right channel.
-        """
-
-        return int(self.get_values()[1])
-
-
-    def get_index(self):
-        """Return this sample's index.
-
-        Returns:
-            index (int): The sample's index."""
-
-        return self.index
+        self.__all_samples[self.__index, 1] = int(new_right_val)
 
     def __eq__(self, other):
-        """Checks whether this sample and another are equal.
+        """
+        Checks whether this sample and another are equal.
         Two samples are considered equal if their left and right channels have
         the same values.
 
@@ -190,8 +143,8 @@ class StereoSample():
             equal (bool): Whether two samples are equal (True) or not (False)
         """
 
-        return self.get_left() == other.get_left() \
-                and self.get_right() == other.get_right()
+        return self.left == other.left \
+                and self.right == other.right
 
 
 class Sound():
@@ -199,16 +152,14 @@ class Sound():
     A class representing audio. A sound object consists of a sequence of
     samples.
 
-    Attributes:
-        sample_rate (int): Rate at which sound was sampled.
-        samples (numpy.ndarray): Sampled data for the sound.
-        channels (int): Number of channels in the sound.
-        filename (str, optional): Name of file where sound was read from.
-        numpy_encoding (numpy.dtype): Encoding used for data.
+    Properties:
+        sample_rate (int): The rate at which the sound was sampled, in samples
+        per second.
     """
 
     def __init__(self, filename=None, samples=None):
-        """Create a new Sound object.
+        """
+        Create a new Sound object.
 
         This new sound object is based either on a file (when filename is
         given) or an existing set of samples (when samples is given).
@@ -223,31 +174,32 @@ class Sound():
             RuntimeError: When neither filename or samples parameter is given.
         """
 
-        self.numpy_encoding = numpy.dtype('int16')  # default encoding
-        self.set_filename(filename)
+        self.__sample_encoding = numpy.dtype('int16')  # default encoding
+        self.__set_filename(filename)
 
         if filename is not None:
-            self.sample_rate, sample_array = scipy.io.wavfile.read(filename)
-            self.samples = numpy.ndarray.copy(sample_array)
+            self.__sample_rate, sample_array = scipy.io.wavfile.read(filename)
+            self.__samples = numpy.ndarray.copy(sample_array)
 
         elif samples is not None:
-            self.sample_rate, self.samples = samples
+            self.__sample_rate, self.__samples = samples
 
         else:
             raise RuntimeError("No arguments were given to the Sound constructor.")
 
-        if len(self.samples.shape) == 1:
-            self.channels = 1
+        if len(self.__samples.shape) == 1:
+            self.__channels = 1
         else:
-            self.channels = self.samples.shape[1]
-        self.numpy_encoding = self.samples.dtype
+            self.__channels = self.__samples.shape[1]
+        self.__sample_encoding = self.__samples.dtype
 
 
     def __eq__ (self, other):
-        """Compares this sound with another one.
+        """
+        Compares this Sound with another one.
 
-        Two sounds are considered equal if they have the same number of channels
-        and all of their samples match.
+        Two Sound objects are considered equal if they have the same number of
+        channels and all of their samples match.
 
         Parameters:
             other (Sound): The sound to compare this one to.
@@ -256,41 +208,41 @@ class Sound():
             equal (bool): True if self and other are equal, false otherwise
         """
         if self.get_channels() == other.get_channels():
-            return numpy.all(self.samples == other.samples)
+            return numpy.all(self.__samples == other.__samples)
         else:
             return False
 
     def __str__(self):
         """Return a string representation of this sound."""
 
-        return "Sound of length " + str(len(self))
+        return "Sound with " + str(len(self)) + " samples."
 
 
     def __iter__(self):
         """Return an iterator to allow iterating through the samples in this
         sound."""
 
-        if self.channels == 1:
+        if self.__channels == 1:
             for i in range(len(self)):
-                yield MonoSample(self.samples, i)
+                yield MonoSample(self.__samples, i)
 
-        elif self.channels == 2:
+        elif self.__channels == 2:
             for i in range(len(self)):
-                yield StereoSample(self.samples, i)
+                yield StereoSample(self.__samples, i)
 
 
     def __len__(self):
         """Return the number of samples in this sound."""
 
-        return len(self.samples)
+        return len(self.__samples)
 
 
-    def __add__(self, other_sound):
-        """Return a new sound that starts with this sound and ends with another
-        sound.
+    def __add__(self, second_sound):
+        """
+        Return a new Sound consisting of this Sound followed by another Sound.
 
         Parameters:
-            other_sound (Sound): The sound object that will be the second part
+            second_sound (Sound): The sound object that will be the second part
             of the new sound.
 
         Returns:
@@ -299,12 +251,13 @@ class Sound():
         """
 
         combined = self.copy()
-        combined.append(other_sound)
+        combined.append(second_sound)
         return combined
 
 
     def __mul__(self, num):
-        """Return a new sound that is this sound repeated multiple times.
+        """
+        Return a new Sound that is this sound repeated multiple times.
 
         Parameters:
             num (int): The number of times to repeat this sound in the new sound.
@@ -321,7 +274,8 @@ class Sound():
 
 
     def copy(self):
-        """Create a copy of this Sound.
+        """
+        Create a copy of this Sound.
 
         This copy is "deep" in that modifying the samples in it will not affect
         this sound (and vice versa).
@@ -330,11 +284,12 @@ class Sound():
             new_copy (Sound): A deep copy of this sound.
         """
 
-        return Sound(samples=(self.sample_rate, self.samples.copy()))
+        return Sound(samples=(self.__sample_rate, self.__samples.copy()))
 
 
     def append_silence(self, num_samples):
-        """Adds silence to the end of this sound.
+        """
+        Adds silence to the end of this sound.
 
         Parameters:
             num_samples (int): Number of (silent) samples added.
@@ -343,16 +298,17 @@ class Sound():
             Silence is represented by samples with 0 values for all the channels.
         """
 
-        if self.channels == 1:
-            silence_array = numpy.zeros(num_samples, self.numpy_encoding)
+        if self.__channels == 1:
+            silence_array = numpy.zeros(num_samples, self.__sample_encoding)
         else:
-            silence_array = numpy.zeros((num_samples, 2), self.numpy_encoding)
+            silence_array = numpy.zeros((num_samples, 2), self.__sample_encoding)
 
-        self.append(Sound(samples=(self.sample_rate, silence_array)))
+        self.append(Sound(samples=(self.__sample_rate, silence_array)))
 
 
     def append(self, snd):
-        """Appends a sound to the end of this one.
+        """
+        Appends a Sound to the end of this one.
 
         Parameters:
             snd (Sound): The sound to append. It sound have the same number of
@@ -367,7 +323,8 @@ class Sound():
 
 
     def insert(self, snd, i):
-        """Inserts a sound into this one.
+        """
+        Inserts a sound into this one.
 
         Parameters:
             snd (Sound): The sound to insert. It sound have the same number of
@@ -383,16 +340,17 @@ class Sound():
         if self.get_channels() != snd.get_channels():
             raise ValueError("Mismatch in number of channels.")
         else:
-            first_chunk = self.samples[:i]
-            second_chunk = self.samples[i:]
+            first_chunk = self.__samples[:i]
+            second_chunk = self.__samples[i:]
             new_samples = numpy.concatenate((first_chunk,
-                                             snd.samples,
+                                             snd.__samples,
                                              second_chunk))
-            self.samples = new_samples
+            self.__samples = new_samples
 
 
     def crop(self, remove_before, remove_after):
-        """Crops this sound.
+        """
+        Crops this sound.
 
         All samples before and after the specified indices are removed.
 
@@ -413,11 +371,12 @@ class Sound():
 
         remove_before = remove_before % len(self)
         remove_after = remove_after % len(self)
-        self.samples = self.samples[remove_before:remove_after + 1]
+        self.__samples = self.__samples[remove_before:remove_after + 1]
 
 
     def normalize(self):
-        """Performs peak normalization on this sound.
+        """
+        Performs peak normalization on this sound.
 
         Notes:
             Peak normalization finds the maximum sample value and scales all
@@ -425,14 +384,15 @@ class Sound():
             allowable sample value (e.g. 32767 for 16-bit samples).
         """
 
-        maximum = self.samples.max()
-        minimum = self.samples.min()
+        maximum = self.__samples.max()
+        minimum = self.__samples.min()
         factor = min(32767.0/maximum, 32767.0/abs(minimum))
-        numpy.multiply(self.samples, factor, out=self.samples, casting='unsafe')
+        numpy.multiply(self.__samples, factor, out=self.__samples, casting='unsafe')
 
 
     def play(self, start_index=0, end_index=-1):
-        """Plays the sound.
+        """
+        Plays part of the sound.
 
         Parameters:
             start_index (int, optional): The sample index where to start playing.
@@ -444,7 +404,7 @@ class Sound():
 
         player = self.copy()
         player.crop(start_index, end_index)
-        sounddevice.play(player.samples)
+        sounddevice.play(player.__samples, samplerate=self.__sample_rate)
 
 
     def stop(self):
@@ -452,17 +412,18 @@ class Sound():
         sounddevice.stop()
 
 
-    def get_sampling_rate(self):
-        """Return the number of samples per second for this sound."""
+    @property
+    def sample_rate(self):
+        """(int) The number of samples per second for this sound."""
+        return self.__sample_rate
 
-        return self.sample_rate
 
-
-    def get_sample(self, i):
-        """Return a specific sample in this sound.
+    def __getitem__(self, index):
+        """
+        Returns the sample at the specified index in this Sound.
 
         Parameters:
-            i (int): The index of the desired sample. This may be negative.
+            index (int): The index of the desired sample. This may be negative.
 
         Raises:
             IndexError: When index is out of range.
@@ -471,38 +432,41 @@ class Sound():
             sample (MonoSample or StereoSample): The requested sample.
         """
 
-        if i >= len(self) or i < -len(self):
-            raise IndexError("i out of range:", i)
+        if index >= len(self) or index < -len(self):
+            raise IndexError("index out of range:", index)
 
-        if self.channels == 1:
-            return MonoSample(self.samples, i)
-        elif self.channels == 2:
-            return StereoSample(self.samples, i)
+        if self.__channels == 1:
+            return MonoSample(self.__samples, index)
+        elif self.__channels == 2:
+            return StereoSample(self.__samples, index)
 
 
     def get_max(self):
-        """Return this sound's highest sample value.
+        """
+        Return this sound's highest sample value.
 
         If this Sound is stereo return the absolute highest for both channels.
         """
-        return self.samples.max()
+        return self.__samples.max()
 
 
     def get_min(self):
-        """Return this sound's lowest sample value.
-        
+        """
+        Return this sound's lowest sample value.
+
         If this sound is stereo return the absolute lowest for both channels.
         """
-        return self.samples.min()
+        return self.__samples.min()
 
 
     def get_channels(self):
         """Return the number of channels in this sound."""
-        return self.channels
+        return self.__channels
 
 
-    def set_filename(self, filename=None):
-        """Associate filename with this sound.
+    def __set_filename(self, filename=None):
+        """
+        Associate a filename with this sound.
 
         If the filename is not given, then it is set to the empty string.
 
@@ -529,22 +493,15 @@ class Sound():
             if file_extension not in ['.wav', '.WAV']:
                 raise ValueError("Filename must end in .wav or .WAV")
 
-            self.filename = filename
+            self.__filename = filename
         else:
-            self.filename = ''
+            self.__filename = ''
 
-
-    def get_filename(self):
-        """Return the filename associated with this sound.
-
-        Returns:
-            filename (str): The name of the associated file, as a path.
-        """
-        return self.filename
 
 
     def save_as(self, filename):
-        """Save this sound to a specific file and set its filename.
+        """
+        Save this sound to a specific file and set its filename.
 
         Parameters:
             filename (str): The name/path of the file. This should have either a
@@ -557,24 +514,51 @@ class Sound():
             currently exist.
         """
 
-        self.set_filename(filename)
-        scipy.io.wavfile.write(self.filename, self.sample_rate, self.samples)
+        self.__set_filename(filename)
+        scipy.io.wavfile.write(self.__filename, self.__sample_rate, self.__samples)
+
 
     def save(self):
-        """Save this sound to a file, specifically to it's set file name.
+        """
+        Save this sound to a file, specifically to its set filename.
 
         Raises:
-            ValueError: When no file name was set for this sound.
+            ValueError: When no filename was set for this sound.
         """
 
-        if self.filename == "":
+        if self.__filename == "":
             raise ValueError("No filename set for this sound.")
 
-        scipy.io.wavfile.write(self.filename, self.sample_rate, self.samples)
+        scipy.io.wavfile.write(self.__filename, self.__sample_rate, self.__samples)
+
+
+    def display(self, figure_title=None):
+        """
+        Display the waveforms of the left and right channels of this sound.
+        """
+        time = numpy.linspace(0, len(self.__samples) / self.__sample_rate,
+                              num=len(self.__samples))
+
+        fig = pp.figure(figure_title)
+
+        # FIXME: Don't assume Int32 values for samples or stereo sound
+        pp.subplot(211, title="Left Channel", ylim=(-33000, 33000),
+                   yticks=[-30000, -20000, -10000, 0, 10000, 20000, 30000])
+        pp.plot(time, self.__samples[:, 0])
+
+        pp.subplot(212, title="Right Channel", ylim=(-33000, 33000),
+                   yticks=[-30000, -20000, -10000, 0, 10000, 20000, 30000])
+        pp.plot(time, self.__samples[:, 1])
+
+        pp.xlabel("Time (s)")
+
+        pp.tight_layout()
+        pp.show()
 
 
 class Note(Sound):
-    """A class that represents a musical note in the C scale.
+    """
+    A class that represents a musical note in the C scale.
 
     Notes are considered sounds: you can do anything with them that you can do
     with sounds, including combining them with other sounds.
@@ -592,7 +576,8 @@ class Note(Sound):
     default_amp = 5000  # The default amplitude of a note.
 
     def __init__(self, note, note_length, octave=0):
-        """Create a new note of a specific length and octave.
+        """
+        Create a new note of a specific length and octave.
 
         Parameters:
             note (str): The name of the note: may be one of the following
@@ -615,17 +600,10 @@ class Note(Sound):
         if note not in self.frequencies:
             raise ValueError("Invalid note:", note)
 
-        self.sample_rate = 44100
+        freq = int(self.frequencies[note] * (2.0 ** octave))
+        samples = create_sine_wave(freq, self.default_amp, note_length)
 
-        freq = self.frequencies[note] * (2.0 ** octave)
-
-        self.samples = create_sine_wave(int(freq), self.default_amp,
-                note_length)
-
-        self.set_filename(None)
-
-        self.channels = self.samples.shape[1]
-        self.numpy_encoding = self.samples.dtype
+        super().__init__(samples=(44100, samples))
 
 
 """
@@ -633,7 +611,8 @@ Helper Functions
 """
 
 def create_sine_wave(frequency, amplitude, duration):
-    """ Creates an array with a sine wave of a specified frequency, amplitude,
+    """
+    Creates an array with a sine wave of a specified frequency, amplitude,
     and duration.
 
     Parameters:
@@ -668,7 +647,8 @@ def create_sine_wave(frequency, amplitude, duration):
 
 
 def envelope(samples, channels):
-    """Add an envelope to samples to prevent clicking.
+    """
+    Add an envelope to samples to prevent clicking.
 
     Parameters:
         samples (numpy.array): The samples to envelope.
@@ -694,15 +674,21 @@ def envelope(samples, channels):
 Global Sound Functions
 """
 
-def load_sound(filename):
-    """Return the Sound at file filename. Requires: file is an uncompressed
-    .wav file."""
+def load_sound(wav_filename):
+    """
+    Return a new Sound object from the audio data in the given file.
 
-    return Sound(filename=filename)
+    The specified filename must be an uncompressed .wav file.
+    """
+
+    return Sound(filename=wav_filename)
 
 
 def create_silent_sound(num_samples):
     """Return a silent Sound num_samples samples long."""
+
+    if num_samples < 1:
+        raise ValueError("Number of samples must be positive.")
 
     arr = [[0, 0] for i in range(num_samples)]
     npa = numpy.array(arr, dtype=numpy.dtype('int16'))
@@ -792,75 +778,9 @@ def wait_until_played():
     sounddevice.wait()
 
 
-def get_sampling_rate(snd):
-    """Return the Sound snd's sampling rate."""
-
-    return snd.get_sampling_rate()
-
-
-def get_sample(snd, i):
-    """Return Sound snd's Sample object at index i."""
-
-    return snd.get_sample(i)
-
-
 """
 Global Sample Functions
 """
-
-def get_index(samp):
-    """Return Sample samp's index."""
-
-    return samp.get_index()
-
-
-def set_value(mono_samp, value):
-    """Set MonoSample mono_samp's value to value."""
-
-    mono_samp.set_value(value)
-
-
-def get_value(mono_samp):
-    """Return MonoSample mono_samp's value."""
-
-    return mono_samp.get_value()
-
-
-def set_values(stereo_samp, left, right):
-    """Set StereoSample stereo_samp's left value to left and
-    right value to right."""
-
-    stereo_samp.set_values(left, right)
-
-
-def get_values(stereo_samp):
-    """Return StereoSample stereo_samp's values in a tuple, (left, right)."""
-
-    return stereo_samp.get_values()
-
-
-def set_left(stereo_samp, value):
-    """Set StereoSample stereo_samp's left value to value."""
-
-    stereo_samp.set_left(value)
-
-
-def get_left(stereo_samp):
-    """Return StereoSample stereo_samp's left value."""
-
-    return stereo_samp.get_left()
-
-
-def set_right(stereo_samp, value):
-    """Set StereoSample stereo_samp's right value to value."""
-
-    stereo_samp.set_right(value)
-
-
-def get_right(stereo_samp):
-    """Return StereoSample stereo_samp's right value."""
-
-    return stereo_samp.get_right()
 
 def copy(obj):
     """Return a deep copy of sound obj."""
