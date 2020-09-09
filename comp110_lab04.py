@@ -40,7 +40,7 @@ def get_max_in_range(my_sound, start, end):
     return max_val
 
 
-# Add new function definitions here.
+# To Do: Define your set_extremes function below this line.
 
 
 jolly = sound.load_sound("jolly.wav")
@@ -49,4 +49,4 @@ sound.wait_until_played()  # waits until jolly is done playing
 jolly.display()
 
 
-# Add new test code here.
+# To Do: Add new test code after this line.
