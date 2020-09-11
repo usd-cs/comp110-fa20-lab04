@@ -49,4 +49,37 @@ sound.wait_until_played()  # waits until jolly is done playing
 jolly.display()
 
 
+
+
+
 # To Do: Add new test code after this line.
+
+
+
+
+
+copy_sound = sound.copy(jolly)
+
+def set_extremes(original_sound):
+    
+    max_left_value = get_max_in_range(copy_sound, 0, len(copy_sound))
+    #right_val = 0
+    for i in range(len(copy_sound)):
+        sample = copy_sound[i]
+        sample.right = 0
+        if sample.left > 3000:
+            sample.left = int(max_left_value * (0.25))
+        elif sample.left < -3000:
+            sample.left = int(max_left_value * (-0.25))
+        else:
+            sample.left = sample.left
+    
+    return copy_sound
+
+
+extreme_laugh = set_extremes(copy_sound) 
+extreme_laugh.play() 
+sound.wait_until_played()
+extreme_laugh.display()
+
+
